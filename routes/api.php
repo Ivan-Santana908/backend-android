@@ -20,6 +20,9 @@ Route::get('/health', function () {
         // Count users
         $userCount = \App\Models\Usuario::count();
         
+        // Test JWT
+        $jwtConfigured = config('jwt.secret') ? 'yes' : 'no';
+        
         return response()->json([
             'status' => 'ok',
             'database' => 'connected',
@@ -27,14 +30,62 @@ Route::get('/health', function () {
             'users_count' => $userCount,
             'env' => [
                 'APP_ENV' => config('app.env'),
+                'APP_DEBUG' => config('app.debug'),
                 'DB_CONNECTION' => config('database.default'),
-                'JWT_CONFIGURED' => config('jwt.secret') ? 'yes' : 'no'
+                'JWT_CONFIGURED' => $jwtConfigured,
+                'JWT_TTL' => config('jwt.ttl')
             ]
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+Route::get('/test-login-setup', function () {
+    try {
+        $results = [];
+        
+        // 1. Check database connection
+        try {
+            DB::connection('mongodb')->getDatabaseName();
+            $results['database'] = '✓ Connected';
+        } catch (\Exception $e) {
+            $results['database'] = '✗ Error: ' . $e->getMessage();
+        }
+        
+        // 2. Check users collection
+        try {
+            $userCount = \App\Models\Usuario::count();
+            $results['users'] = "✓ Found $userCount users";
+            
+            if ($userCount > 0) {
+                $firstUser = \App\Models\Usuario::first();
+                $results['first_user'] = [
+                    'email' => $firstUser->email,
+                    'has_password' => !empty($firstUser->password),
+                    'password_length' => strlen($firstUser->password ?? '')
+                ];
+            }
+        } catch (\Exception $e) {
+            $results['users'] = '✗ Error: ' . $e->getMessage();
+        }
+        
+        // 3. Check JWT config
+        $results['jwt_secret'] = config('jwt.secret') ? '✓ Configured' : '✗ Missing';
+        $results['jwt_ttl'] = config('jwt.ttl');
+        
+        // 4. Check app key
+        $results['app_key'] = config('app.key') ? '✓ Configured' : '✗ Missing';
+        
+        return response()->json($results);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ], 500);
     }
 });
