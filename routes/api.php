@@ -11,6 +11,34 @@ use App\Http\Controllers\AlexaController;
 use App\Http\Controllers\AlexaTimerController;
 
 // 🔓 Rutas públicas
+Route::get('/health', function () {
+    try {
+        // Test MongoDB connection
+        $connection = DB::connection('mongodb');
+        $connection->getDatabaseName();
+        
+        // Count users
+        $userCount = \App\Models\Usuario::count();
+        
+        return response()->json([
+            'status' => 'ok',
+            'database' => 'connected',
+            'db_name' => config('database.connections.mongodb.database'),
+            'users_count' => $userCount,
+            'env' => [
+                'APP_ENV' => config('app.env'),
+                'DB_CONNECTION' => config('database.default'),
+                'JWT_CONFIGURED' => config('jwt.secret') ? 'yes' : 'no'
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
