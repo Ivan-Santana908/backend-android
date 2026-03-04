@@ -77,6 +77,10 @@ return [
             'options' => [
                 'database' => env('DB_AUTHENTICATION_DATABASE', 'admin'),
                 'appName' => 'CulinarySmart',
+                'tls' => true,
+                'tlsAllowInvalidCertificates' => true,
+                'retryWrites' => true,
+                'retryReads' => true,
             ],
         ],
 

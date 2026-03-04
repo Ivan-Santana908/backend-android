@@ -1,7 +1,13 @@
 FROM php:8.2-cli
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libzip-dev \
+    && apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        libzip-dev \
+        libssl-dev \
+        pkg-config \
+        libcurl4-openssl-dev \
     && docker-php-ext-install zip \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
