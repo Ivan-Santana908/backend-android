@@ -45,9 +45,27 @@ Route::get('/health', function () {
     }
 });
 
+Route::get('/test-env', function () {
+    return response()->json([
+        'DB_CONNECTION' => env('DB_CONNECTION', 'NOT SET'),
+        'DB_HOST' => env('DB_HOST', 'NOT SET'),
+        'DB_PORT' => env('DB_PORT', 'NOT SET'),
+        'DB_DATABASE' => env('DB_DATABASE', 'NOT SET'),
+        'DB_USERNAME' => env('DB_USERNAME') ? 'SET (hidden)' : 'NOT SET',
+        'DB_PASSWORD' => env('DB_PASSWORD') ? 'SET (hidden)' : 'NOT SET',
+        'DB_AUTHENTICATION_DATABASE' => env('DB_AUTHENTICATION_DATABASE', 'NOT SET'),
+        'JWT_SECRET' => env('JWT_SECRET') ? 'SET (hidden)' : 'NOT SET',
+        'APP_KEY' => env('APP_KEY') ? 'SET (hidden)' : 'NOT SET',
+        'CORS_ALLOWED_ORIGINS' => env('CORS_ALLOWED_ORIGINS', 'NOT SET')
+    ]);
+});
+
 Route::get('/test-login-setup', function () {
     try {
         $results = [];
+        
+        // Show connection string being used
+        $results['connection_string'] = 'mongodb://' . config('database.connections.mongodb.host') . ':' . config('database.connections.mongodb.port');
         
         // 1. Check database connection
         try {
